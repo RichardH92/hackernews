@@ -16,7 +16,7 @@ class App extends Component {
 		super(props);
 
 		this.state = {
-			result: null,
+			results: null,
 			query: DEFAULT_QUERY,
 		};
 
@@ -34,10 +34,14 @@ class App extends Component {
 
 	setSearchTopStories(result) {
 		const { hits, page } = result;
-		const oldHits = page === 0 ? [] : this.state.result.hits;
+		const { query } = this.state;
+		
+		const oldHits = page === 0 ? [] : this.state.results[query].hits;
 		const updatedHits = [ ...oldHits, ...hits ];
 
-		this.setState({ result : { hits: updatedHits, page } });
+		this.setState({
+			results : { ...this.state.results, [query]: { hits: updatedHits, page } }
+		});
 	}
 
 	fetchSearchTopStories(query, page) {
@@ -56,8 +60,9 @@ class App extends Component {
 	}
 
 	render() {
-		const { query, result } = this.state; 
-		const page = ( result && result.page) || 0;
+		const { query, results } = this.state; 
+		const page = ( results && results[query] && results[query].page) || 0;
+		const list = ( results && results[query] && results[query].hits) || [];
 		return (
 			<div className="page">
 			<div className="interactions">
@@ -65,7 +70,7 @@ class App extends Component {
 			Search
 			</Search>
 			</div>
-			{ result && <Table list={result.hits} /> }
+			<Table list={list} />
 			<div className="interactions">
 				<Button onClick={() => this.fetchSearchTopStories(query, page + 1)}>More</Button>
 			</div>
