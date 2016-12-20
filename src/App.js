@@ -7,8 +7,6 @@ const PATH_BASE = 'https://hn.algolia.com/api/v1';
 const PATH_SEARCH = '/search';
 const PARAM_SEARCH = 'query=';
 
-const isSearched = (query) => (item) => !query || item.title.toLowerCase().indexOf(query.toLowerCase()) !== -1;
-
 class App extends Component {
 	constructor(props) {
 		super(props);
@@ -21,6 +19,13 @@ class App extends Component {
 		this.setSearchTopStories = this.setSearchTopStories.bind(this);
 		this.fetchSearchTopStories = this.fetchSearchTopStories.bind(this);
 		this.onSearchChange = this.onSearchChange.bind(this)
+		this.onSearchSubmit = this.onSearchSubmit.bind(this)
+	}
+
+	onSearchSubmit(event) {
+		const { query } = this.state;
+		this.fetchSearchTopStories(query);
+		event.preventDefault();
 	}
 
 	setSearchTopStories(result) {
@@ -40,8 +45,6 @@ class App extends Component {
 
 	onSearchChange(event) {
 		this.setState({query: event.target.value});
-		const { query } = this.state;
-		this.fetchSearchTopStories(query);
 	}
 
 	render() {
@@ -49,28 +52,28 @@ class App extends Component {
 		return (
 			<div className="page">
 			<div className="interactions">
-			<Search value={query} onChange={this.onSearchChange} >
+			<Search value={query} onChange={this.onSearchChange} onSubmit={this.onSearchSubmit}>
 			Search
 			</Search>
 			</div>
-			{ result ? <Table list={result.hits} pattern={query} /> : null }
+			{ result && <Table list={result.hits} /> }
 			</div>
 
 		);
 	}
 }
 
-const Search = ({ value, onChange, children }) =>
-	<form>
-	{children}
+const Search = ({ value, onChange, onSubmit, children }) =>
+	<form onSubmit={onSubmit}>
 		<input type="text" value={value} onChange={onChange} />
+		<button type="submit">{children}</button>
 	</form>
 
 
 		const Table = ({ list, pattern }) =>
 	<div className="table">
 	{
-		list.filter(isSearched(pattern)).map((item) =>
+		list.map((item) =>	
 			<div key={item.objectID} className="table-row">
 			<span style={{ width: '40%' }}><a href={item.url}>{item.title}></a></span>
 			<span style={{ width: '30%' }}>{item.author}</span>
