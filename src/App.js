@@ -29,6 +29,7 @@ class App extends Component {
 			searchKey: '',
 			isLoading: false,
 			sortKey: 'NONE',
+			isSortReverse: false,
 		};
 
 		this.setSearchTopStories = this.setSearchTopStories.bind(this);
@@ -40,7 +41,8 @@ class App extends Component {
 	}
 
 	onSort(sortKey) {
-		this.setState({ sortKey });
+		const isSortReverse = this.state.sortKey === sortKey && !this.state.isSortReverse;
+		this.setState({ sortKey, isSortReverse });
 	}
 
 	needsToSearchTopStories(query) {
@@ -89,7 +91,7 @@ class App extends Component {
 	}
 
 	render() {
-		const { query, results, searchKey, isLoading, sortKey } = this.state; 
+		const { query, results, searchKey, isLoading, sortKey, isSortReverse } = this.state; 
 		const page = ( results && results[searchKey] && results[searchKey].page) || 0;
 		const list = ( results && results[searchKey] && results[searchKey].hits) || [];
 		return (
@@ -99,7 +101,7 @@ class App extends Component {
 				Search
 				</Search>
 				</div>
-				<Table list={list} sortKey={sortKey} onSort={this.onSort} />
+				<Table list={list} sortKey={sortKey} onSort={this.onSort} isSortReverse={isSortReverse}/>
 				<div className="interactions">
 				<ButtonWithLoading
 					isLoading={isLoading}
@@ -121,7 +123,11 @@ const Search = ({ value, onChange, onSubmit, children }) =>
 </form>
 
 
-const Table = ({ list, sortKey, onSort }) =>
+const Table = ({ list, sortKey, onSort, isSortReverse }) => {
+	const sortedList = SORTS[sortKey](list);
+	const reverseSortedList = isSortReverse ? sortedList.reverse() : sortedList;
+
+	return(
 <div className="table">
 <div className="table-header">
 <span style={{ width: '40%' }}>
@@ -138,7 +144,7 @@ const Table = ({ list, sortKey, onSort }) =>
 </span>
 </div>
 {
-	SORTS[sortKey](list).map((item) =>	
+	reverseSortedList.map((item) =>	
 			<div key={item.objectID} className="table-row">
 			<span style={{ width: '40%' }}><a href={item.url}>{item.title}></a></span>
 			<span style={{ width: '30%' }}>{item.author}</span>
@@ -148,6 +154,8 @@ const Table = ({ list, sortKey, onSort }) =>
 		)
 }
 </div>
+);
+}
 
 const Button = ({ onClick, children, className }) =>
 <button onClick={onClick} type="button" className={className}>
