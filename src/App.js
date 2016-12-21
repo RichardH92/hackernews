@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import logo from './logo.svg';
 import './App.css';
 import { sortBy } from 'lodash';
+import classNames from 'classnames';
 
 const DEFAULT_QUERY = 'redux';
 const PATH_BASE = 'https://hn.algolia.com/api/v1';
@@ -35,8 +36,8 @@ class App extends Component {
 		this.setSearchTopStories = this.setSearchTopStories.bind(this);
 		this.fetchSearchTopStories = this.fetchSearchTopStories.bind(this);
 		this.onSearchChange = this.onSearchChange.bind(this)
-		this.onSearchSubmit = this.onSearchSubmit.bind(this)
-		this.needsToSearchTopStories = this.needsToSearchTopStories.bind(this);
+			this.onSearchSubmit = this.onSearchSubmit.bind(this)
+			this.needsToSearchTopStories = this.needsToSearchTopStories.bind(this);
 		this.onSort = this.onSort.bind(this);
 	}
 
@@ -104,10 +105,10 @@ class App extends Component {
 				<Table list={list} sortKey={sortKey} onSort={this.onSort} isSortReverse={isSortReverse}/>
 				<div className="interactions">
 				<ButtonWithLoading
-					isLoading={isLoading}
-					onClick={() => this.fetchSearchTopStories(searchKey, page + 1)}>
-					More
-					</ButtonWithLoading>
+				isLoading={isLoading}
+				onClick={() => this.fetchSearchTopStories(searchKey, page + 1)}>
+				More
+				</ButtonWithLoading>
 
 				</div>
 				</div>
@@ -128,33 +129,33 @@ const Table = ({ list, sortKey, onSort, isSortReverse }) => {
 	const reverseSortedList = isSortReverse ? sortedList.reverse() : sortedList;
 
 	return(
-<div className="table">
-<div className="table-header">
-<span style={{ width: '40%' }}>
-<Sort sortKey={'TITLE'} onSort={onSort}>Title</Sort>
-</span>
-<span style={{ width: '30%' }}>
-<Sort sortKey={'AUTHOR'} onSort={onSort}>Author</Sort>
-</span>
-<span style={{ width: '15%' }}>
-<Sort sortKey={'COMMENTS'} onSort={onSort}>Comments</Sort>
-</span>
-<span style={{ width: '15%' }}>
-<Sort sortKey={'POINTS'} onSort={onSort}>Points</Sort>
-</span>
-</div>
-{
-	reverseSortedList.map((item) =>	
-			<div key={item.objectID} className="table-row">
-			<span style={{ width: '40%' }}><a href={item.url}>{item.title}></a></span>
-			<span style={{ width: '30%' }}>{item.author}</span>
-			<span style={{ width: '15%' }}>{item.num_comments}</span>
-			<span style={{ width: '15%' }}>{item.points}</span>
+			<div className="table">
+			<div className="table-header">
+			<span style={{ width: '40%' }}>
+			<Sort sortKey={'TITLE'} onSort={onSort} activeSortKey={sortKey}>Title</Sort>
+			</span>
+			<span style={{ width: '30%' }}>
+			<Sort sortKey={'AUTHOR'} onSort={onSort} activeSortKey={sortKey}>Author</Sort>
+			</span>
+			<span style={{ width: '15%' }}>
+			<Sort sortKey={'COMMENTS'} onSort={onSort} activeSortKey={sortKey}>Comments</Sort>
+			</span>
+			<span style={{ width: '15%' }}>
+			<Sort sortKey={'POINTS'} onSort={onSort} activeSortKey={sortKey}>Points</Sort>
+			</span>
 			</div>
-		)
-}
-</div>
-);
+			{
+				reverseSortedList.map((item) =>	
+						<div key={item.objectID} className="table-row">
+						<span style={{ width: '40%' }}><a href={item.url}>{item.title}></a></span>
+						<span style={{ width: '30%' }}>{item.author}</span>
+						<span style={{ width: '15%' }}>{item.num_comments}</span>
+						<span style={{ width: '15%' }}>{item.points}</span>
+						</div>
+						)
+			}
+	</div>
+		);
 }
 
 const Button = ({ onClick, children, className }) =>
@@ -163,17 +164,24 @@ const Button = ({ onClick, children, className }) =>
 </button>
 
 const withLoading = (Component) => ({ isLoading, ...props }) =>
-	isLoading ? <Loading /> : <Component { ...props } />;
+isLoading ? <Loading /> : <Component { ...props } />;
 
 const Loading = () =>
 <div>Loading...</div>
 
 const ButtonWithLoading = withLoading(Button);
 
-const Sort = ({ sortKey, onSort, children }) =>
-<Button onClick={() => onSort(sortKey)} className="button-inline">
-{children}
-</Button>
+const Sort = ({ sortKey, onSort, children, activeSortKey }) => {
+	const sortClass = classNames(
+			'button-inline', { 'button-active' : sortKey === activeSortKey }
+			);
+
+	return (
+			<button onClick={() => onSort(sortKey)} className={sortClass} type="button">
+			{children}
+			</button>
+	       );
+}
 
 export default App;
 
