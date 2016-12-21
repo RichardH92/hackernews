@@ -18,29 +18,39 @@ class App extends Component {
 		this.state = {
 			results: null,
 			query: DEFAULT_QUERY,
+			searchKey: '',
 		};
 
 		this.setSearchTopStories = this.setSearchTopStories.bind(this);
 		this.fetchSearchTopStories = this.fetchSearchTopStories.bind(this);
 		this.onSearchChange = this.onSearchChange.bind(this)
 		this.onSearchSubmit = this.onSearchSubmit.bind(this)
+		this.needsToSearchTopStories = this.needsToSearchTopStories.bind(this);
+	}
+
+	needsToSearchTopStories(query) {
+		return !this.state.results[query];
 	}
 
 	onSearchSubmit(event) {
 		const { query } = this.state;
-		this.fetchSearchTopStories(query, DEFAULT_PAGE);
+		this.setState({ searchKey : query });
+		if (this.needsToSearchTopStories(query)) {
+			this.fetchSearchTopStories(query, DEFAULT_PAGE);
+		}
+
 		event.preventDefault();
 	}
 
 	setSearchTopStories(result) {
 		const { hits, page } = result;
-		const { query } = this.state;
+		const { searchKey } = this.state;
 		
-		const oldHits = page === 0 ? [] : this.state.results[query].hits;
+		const oldHits = page === 0 ? [] : this.state.results[searchKey].hits;
 		const updatedHits = [ ...oldHits, ...hits ];
 
 		this.setState({
-			results : { ...this.state.results, [query]: { hits: updatedHits, page } }
+			results : { ...this.state.results, [searchKey]: { hits: updatedHits, page } }
 		});
 	}
 
@@ -52,6 +62,7 @@ class App extends Component {
 
 	componentDidMount() {
 		const { query } = this.state;
+		this.setState({ searchKey : query });
 		this.fetchSearchTopStories(query, DEFAULT_PAGE);
 	}
 
@@ -60,9 +71,9 @@ class App extends Component {
 	}
 
 	render() {
-		const { query, results } = this.state; 
-		const page = ( results && results[query] && results[query].page) || 0;
-		const list = ( results && results[query] && results[query].hits) || [];
+		const { query, results, searchKey } = this.state; 
+		const page = ( results && results[searchKey] && results[searchKey].page) || 0;
+		const list = ( results && results[searchKey] && results[searchKey].hits) || [];
 		return (
 			<div className="page">
 			<div className="interactions">
@@ -72,7 +83,7 @@ class App extends Component {
 			</div>
 			<Table list={list} />
 			<div className="interactions">
-				<Button onClick={() => this.fetchSearchTopStories(query, page + 1)}>More</Button>
+				<Button onClick={() => this.fetchSearchTopStories(searchKey, page + 1)}>More</Button>
 			</div>
 			</div>
 
