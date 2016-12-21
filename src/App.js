@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import logo from './logo.svg';
 import './App.css';
+import { sortBy } from 'lodash';
 
 const DEFAULT_QUERY = 'redux';
 const PATH_BASE = 'https://hn.algolia.com/api/v1';
@@ -10,6 +11,13 @@ const DEFAULT_PAGE = 0;
 const PARAM_PAGE = 'page=';
 const DEFAULT_HPP = '100';
 const PARAM_HPP = 'hitsPerPage=';
+const SORTS = {
+	NONE: list => list,
+	TITLE: list => sortBy(list, 'title'),
+	AUTHOR: list => sortBy(list, 'author'),
+	COMMENTS: list => sortBy(list, 'num_comments').reverse(),
+	POINTS: list => sortBy(list, 'points').reverse(),
+};
 
 class App extends Component {
 	constructor(props) {
@@ -20,6 +28,7 @@ class App extends Component {
 			query: DEFAULT_QUERY,
 			searchKey: '',
 			isLoading: false,
+			sortKey: 'NONE',
 		};
 
 		this.setSearchTopStories = this.setSearchTopStories.bind(this);
@@ -27,6 +36,11 @@ class App extends Component {
 		this.onSearchChange = this.onSearchChange.bind(this)
 		this.onSearchSubmit = this.onSearchSubmit.bind(this)
 		this.needsToSearchTopStories = this.needsToSearchTopStories.bind(this);
+		this.onSort = this.onSort.bind(this);
+	}
+
+	onSort(sortKey) {
+		this.setState({ sortKey });
 	}
 
 	needsToSearchTopStories(query) {
@@ -75,7 +89,7 @@ class App extends Component {
 	}
 
 	render() {
-		const { query, results, searchKey, isLoading } = this.state; 
+		const { query, results, searchKey, isLoading, sortKey } = this.state; 
 		const page = ( results && results[searchKey] && results[searchKey].page) || 0;
 		const list = ( results && results[searchKey] && results[searchKey].hits) || [];
 		return (
@@ -85,15 +99,14 @@ class App extends Component {
 				Search
 				</Search>
 				</div>
-				<Table list={list} />
+				<Table list={list} sortKey={sortKey} onSort={this.onSort} />
 				<div className="interactions">
-				<ButtonWithLoading 
+				<ButtonWithLoading
 					isLoading={isLoading}
 					onClick={() => this.fetchSearchTopStories(searchKey, page + 1)}>
 					More
 					</ButtonWithLoading>
 
-				}
 				</div>
 				</div>
 
@@ -108,10 +121,24 @@ const Search = ({ value, onChange, onSubmit, children }) =>
 </form>
 
 
-const Table = ({ list, pattern }) =>
+const Table = ({ list, sortKey, onSort }) =>
 <div className="table">
+<div className="table-header">
+<span style={{ width: '40%' }}>
+<Sort sortKey={'TITLE'} onSort={onSort}>Title</Sort>
+</span>
+<span style={{ width: '30%' }}>
+<Sort sortKey={'AUTHOR'} onSort={onSort}>Author</Sort>
+</span>
+<span style={{ width: '15%' }}>
+<Sort sortKey={'COMMENTS'} onSort={onSort}>Comments</Sort>
+</span>
+<span style={{ width: '15%' }}>
+<Sort sortKey={'POINTS'} onSort={onSort}>Points</Sort>
+</span>
+</div>
 {
-	list.map((item) =>	
+	SORTS[sortKey](list).map((item) =>	
 			<div key={item.objectID} className="table-row">
 			<span style={{ width: '40%' }}><a href={item.url}>{item.title}></a></span>
 			<span style={{ width: '30%' }}>{item.author}</span>
@@ -122,8 +149,8 @@ const Table = ({ list, pattern }) =>
 }
 </div>
 
-const Button = ({ onClick, children }) =>
-<button onClick={onClick} type="button">
+const Button = ({ onClick, children, className }) =>
+<button onClick={onClick} type="button" className={className}>
 {children}
 </button>
 
@@ -134,6 +161,11 @@ const Loading = () =>
 <div>Loading...</div>
 
 const ButtonWithLoading = withLoading(Button);
+
+const Sort = ({ sortKey, onSort, children }) =>
+<Button onClick={() => onSort(sortKey)} className="button-inline">
+{children}
+</Button>
 
 export default App;
 
